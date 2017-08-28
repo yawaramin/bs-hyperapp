@@ -1,0 +1,9 @@
+{
+  "name": "bs-hyperapp",
+  "sources": { "dir": "src" },
+  "bsc-flags": ["-bs-super-errors"],
+  "namespace": true,
+  "bs-dependencies": ["bs-webapi"],
+  "package-specs": ["es6"]
+}
+
