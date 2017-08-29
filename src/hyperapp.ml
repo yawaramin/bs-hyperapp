@@ -26,7 +26,7 @@ type ('s, 'a) app_props =
 type vnode
 
 type ('state, 'actions) view =
-  'state Js.t -> 'actions Js.t Js.undefined -> vnode [@bs]
+  'state Js.t -> 'actions Js.t -> vnode [@bs]
 
 (**
 @param root https://github.com/hyperapp/hyperapp/blob/f307aee3d14f0268660c277698c213d8e42cea8d/docs/root.md
@@ -42,7 +42,7 @@ https://github.com/hyperapp/hyperapp/blob/f307aee3d14f0268660c277698c213d8e42cea
 *)
 external h :
   string ->
-  'attributes Js.t ->
+  ?attrs:'attributes Js.t ->
   ([ `text of string | `children of vnode array ] [@bs.unwrap]) ->
   vnode =
   "" [@@bs.module "hyperapp"]
