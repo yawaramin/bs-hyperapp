@@ -35,18 +35,18 @@ type ('state, 'actions) app_params =
   < state : 'state Js.t Js.undefined;
     view : ('state, 'actions) view;
     actions : 'actions Js.t Js.undefined;
-    root : Bs_webapi.Dom.Element.t > Js.t
+    root : Bs_webapi.Dom.Element.t Js.undefined > Js.t
 
 (**
 https://github.com/hyperapp/hyperapp/blob/f307aee3d14f0268660c277698c213d8e42cea8d/docs/api.md#h
 
 This binding takes an array of node children. See also `h_`.
 *)
-external h : string -> ?attrs:'attributes Js.t -> vnode array -> vnode =
+external h : string -> ?a:'attributes Js.t -> vnode array -> vnode =
   "" [@@bs.module "hyperapp"]
 
 (** This binding takes a single text node. See also `h`. *)
-external h_ : string -> ?attrs:'attributes Js.t -> string -> vnode =
+external h_ : string -> ?a:'attributes Js.t -> string -> vnode =
   "h" [@@bs.module "hyperapp"]
 
 external _app : ('state, 'actions) app_params -> unit =
@@ -54,11 +54,14 @@ external _app : ('state, 'actions) app_params -> unit =
 
 (**
 https://github.com/hyperapp/hyperapp/blob/f307aee3d14f0268660c277698c213d8e42cea8d/docs/api.md#app
+
+Use OCaml-style named parameters instead of JavaScript-style param
+object. Also put view function at end for a more DSL-like feel.
 *)
-let app ?state ~view ?actions root = _app [%bs.obj {
+let app ?state ?actions ?root view = _app [%bs.obj {
   state = Js.Undefined.from_opt state;
   view;
   actions = Js.Undefined.from_opt actions;
-  root
+  root = Js.Undefined.from_opt root
 }]
 
