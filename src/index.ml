@@ -5,10 +5,10 @@ let () =
   let view = fun [@bs] state actions ->
     let text = "Current value is: " ^ string_of_int state##value in
 
-    h "div" (`children [|
-      h "p" ~attrs:[%bs.obj { _class = "main" }] (`text text);
-      h "button" ~attrs:[%bs.obj { onclick = actions##increment }] (`text "Increment");
-      h "button" ~attrs:[%bs.obj { onclick = actions##decrement }] (`text "Decrement") |]) in
+    h "div" [|
+      h_ "p" ~attrs:[%bs.obj { _class = "main" }] text;
+      h_ "button" ~attrs:[%bs.obj { onclick = actions##increment }] "Increment";
+      h_ "button" ~attrs:[%bs.obj { onclick = actions##decrement }] "Decrement" |] in
 
   let actions = object
     method increment state = [%bs.obj { value = state##value + 1 }]

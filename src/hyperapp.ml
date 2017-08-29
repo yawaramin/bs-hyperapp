@@ -39,13 +39,15 @@ type ('state, 'actions) app_params =
 
 (**
 https://github.com/hyperapp/hyperapp/blob/f307aee3d14f0268660c277698c213d8e42cea8d/docs/api.md#h
+
+This binding takes an array of node children. See also `h_`.
 *)
-external h :
-  string ->
-  ?attrs:'attributes Js.t ->
-  ([ `text of string | `children of vnode array ] [@bs.unwrap]) ->
-  vnode =
+external h : string -> ?attrs:'attributes Js.t -> vnode array -> vnode =
   "" [@@bs.module "hyperapp"]
+
+(** This binding takes a single text node. See also `h`. *)
+external h_ : string -> ?attrs:'attributes Js.t -> string -> vnode =
+  "h" [@@bs.module "hyperapp"]
 
 external _app : ('state, 'actions) app_params -> unit =
   "app" [@@bs.module "hyperapp"]
