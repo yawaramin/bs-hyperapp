@@ -1,9 +1,7 @@
 (*
-type vnode
 type event
 type data
 type emit = event -> data -> data [@bs]
-type ('s, 'a) view = 's -> 'a Js.t Js.undefined -> vnode [@bs]
 type ('s, 'a) app_props =
   < state : 's;
     view : ('s, 'a) view;
@@ -23,21 +21,19 @@ type ('s, 'a) app_props =
 
     plugins : (('s, 'a) app_props -> ('s, 'a) app_props [@bs]) Js.undefined;
     root : Web.Element.t Js.undefined > Js.t
-
-external h : string -> 'a Js.t -> 'c array -> vnode =
-  "" [@@bs.module "hyperapp"]
-
-external empty_obj : 'a Js.t = "" [@@bs.obj]
-
-let hc tag ?(a=empty_obj) ?(c=[||]) () = h tag a c
-let ht tag ?(a=empty_obj) text = h tag a [|text|]
 *)
 
 type vnode
 
+type ('state, 'actions) view =
+  'state Js.t -> 'actions Js.t Js.undefined -> vnode [@bs]
+
+(**
+@param root https://github.com/hyperapp/hyperapp/blob/f307aee3d14f0268660c277698c213d8e42cea8d/docs/root.md
+*)
 type ('state, 'actions) app_params =
   < state : 'state Js.t Js.undefined;
-    view : 'state -> 'actions -> vnode;
+    view : ('state, 'actions) view;
     actions : 'actions Js.t Js.undefined;
     root : Bs_webapi.Dom.Element.t > Js.t
 
