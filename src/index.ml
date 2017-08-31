@@ -1,22 +1,21 @@
-let () =
-  let open Hyperapp in
-  let state = [%obj { value = 0 }] in
+open Hyperapp
 
-  let actions = object
-    method increment state = [%obj { value = state##value + 1 }]
-    method decrement state = [%obj { value = state##value - 1 }]
-  end [@bs] in
+type msg = Increment | Decrement | Reset | Set of int
 
-  let root =
-    Js.Option.getExn
-      Bs_webapi.Dom.(Document.getElementById "root" document) in
+let initModel = 0
 
-  app ~state ~actions ~root begin fun [@bs] state actions ->
-    let text = "Current value is: " ^ string_of_int state##value in
+let view model msg =
+  let text = "Current value is: " ^ string_of_int model in
 
-    h "div" [|
-      h_ "p" ~a:[%obj { _class = "main" }] text;
-      h_ "button" ~a:[%obj { onclick = actions##increment }] "Increment";
-      h_ "button" ~a:[%obj { onclick = actions##decrement }] "Decrement" |]
-  end
+  h "div" [
+    h_ "p" ~a:[%obj { _class = "main" }] text;
+    h_ "button" ~a:[%obj { onclick = fun _ -> msg Increment }] "Increment";
+    h_ "button" ~a:[%obj { onclick = fun _ -> msg Decrement }] "Decrement" ]
 
+let update model = function
+  | Increment -> model + 1
+  | Decrement -> model - 1
+  | Reset -> initModel
+  | Set int -> int
+
+let () = app ~model:initModel ~view ~update "root"
