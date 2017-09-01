@@ -1,0 +1,5 @@
+.merlin
+.vscode
+build/index.js
+lib
+node_modules
