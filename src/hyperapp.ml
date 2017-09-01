@@ -7,18 +7,12 @@ external _h :
   'msg vnode =
   "h" [@@bs.module "hyperapp"]
 
-(**
-https://github.com/hyperapp/hyperapp/blob/f307aee3d14f0268660c277698c213d8e42cea8d/docs/api.md#h
-
-This binding takes a list of node children. See also `h_`.
-*)
 let h tagName ?a children =
   _h tagName ?a (`children (Array.of_list children))
 
-(** This binding takes a single text node. See also `h`. *)
 let h_ tagName ?a text = _h tagName ?a (`text text)
 
-external targetOfEvent : 'a -> Bs_webapi.Dom.Element.t =
+external targetOfEvent : 'event -> Bs_webapi.Dom.Element.t =
   "target" [@@bs.get]
 
 external valueOfTarget : Bs_webapi.Dom.Element.t -> string =
@@ -44,12 +38,6 @@ external _app :
     root : Bs_webapi.Dom.Element.t > Js.t -> unit =
   "app" [@@bs.module "hyperapp"]
 
-(**
-https://github.com/hyperapp/hyperapp/blob/f307aee3d14f0268660c277698c213d8e42cea8d/docs/api.md#app
-
-Use OCaml-style named parameters instead of JavaScript-style param
-object.
-*)
 let app ~model ~view ~update root =
   let view = fun [@bs] state actions ->
     view state##model (actions##update) in
