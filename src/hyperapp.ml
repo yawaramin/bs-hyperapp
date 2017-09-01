@@ -18,6 +18,14 @@ let h tagName ?a children =
 (** This binding takes a single text node. See also `h`. *)
 let h_ tagName ?a text = _h tagName ?a (`text text)
 
+external targetOfEvent : 'a -> Bs_webapi.Dom.Element.t =
+  "target" [@@bs.get]
+
+external valueOfTarget : Bs_webapi.Dom.Element.t -> string =
+  "value" [@@bs.get]
+
+let valueOfEvent e = e |> targetOfEvent |> valueOfTarget
+
 type 'model state = < model : 'model > Js.t
 
 type ('model, 'msg) actions =
