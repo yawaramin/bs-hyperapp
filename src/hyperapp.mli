@@ -22,8 +22,7 @@ object.
 *)
 val app :
   model:'model ->
-  view:('model ->
-  ('msg -> unit) -> 'msg vnode) ->
+  view:('model -> ('msg -> unit) -> 'msg vnode) ->
   update:('model -> 'msg -> 'model) ->
   string ->
   unit

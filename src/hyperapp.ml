@@ -25,6 +25,12 @@ type 'model state = < model : 'model > Js.t
 type ('model, 'msg) actions =
   < update :
     'model state ->
+    (*
+    We don't really need to model this parameter exactly, since we only
+    have one action function (`update`) and it's not going to call
+    itself in our design, but it's easier to keep it than introduce a
+    new type.
+    *)
     ('model, 'msg) actions ->
     'msg ->
     'model state [@bs] > Js.t

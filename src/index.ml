@@ -4,10 +4,11 @@ type msg =
   Increment | Decrement | Reset | Edit of int | Set | Disable of bool
   [@@bs.deriving { accessors }]
 
-(** Current value, new value, whether 'set' button disabled *)
-let initModel = 0, 0, false
+type model = { value : int; newValue : int; disabled : bool }
 
-let view (value, newValue, disabled) msg =
+let initModel = { value = 0; newValue = 0; disabled = false }
+
+let view { value; newValue; disabled } msg =
   let text = "Current value is: " ^ string_of_int value in
   let onchange e =
     let m = try e |> valueOfEvent |> int_of_string |> edit with
@@ -26,12 +27,13 @@ let view (value, newValue, disabled) msg =
     h "input" ~a:[%obj { value = newValue; onchange }] [];
     button ~disabled "Set" set ]
 
-let update (value, newValue, disabled) = function
-  | Increment -> value + 1, newValue, disabled
-  | Decrement -> value - 1, newValue, disabled
+let update model = function
+  | Increment -> { model with value = model.value + 1 }
+  | Decrement -> { model with value = model.value - 1 }
   | Reset -> initModel
-  | Edit newValue -> value, newValue, false
-  | Set -> newValue, newValue, disabled
-  | Disable bool -> value, newValue, bool
+  | Edit newValue -> { model with newValue; disabled = false }
+  | Set -> { model with value = model.newValue }
+  | Disable disabled -> { model with disabled }
 
 let () = app ~model:initModel ~view ~update "root"
+
