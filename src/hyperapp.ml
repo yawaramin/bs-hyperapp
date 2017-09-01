@@ -1,67 +1,67 @@
-(*
-type event
-type data
-type emit = event -> data -> data [@bs]
-type ('s, 'a) app_props =
-  < state : 's;
-    view : ('s, 'a) view;
-    actions : 'a Js.t Js.undefined;
-    events :
-      < loaded :
-          ('s -> 'a Js.t -> unit -> emit [@bs]) array Js.undefined;
+type 'msg vnode
 
-        action :
-          ('s -> 'a Js.t -> data -> emit [@bs]) array Js.undefined;
-
-        update :
-          ('s -> 'a Js.t -> data -> emit [@bs]) array Js.undefined;
-
-        render :
-          ('s -> 'a Js.t -> ('s, 'a) view -> emit [@bs]) array > Js.t Js.undefined;
-
-    plugins : (('s, 'a) app_props -> ('s, 'a) app_props [@bs]) Js.undefined;
-    root : Web.Element.t Js.undefined > Js.t
-*)
-
-type vnode
-
-type ('state, 'actions) view =
-  'state Js.t -> 'actions Js.t -> vnode [@bs]
-
-(**
-@param root https://github.com/hyperapp/hyperapp/blob/f307aee3d14f0268660c277698c213d8e42cea8d/docs/root.md
-*)
-type ('state, 'actions) app_params =
-  < state : 'state Js.t Js.undefined;
-    view : ('state, 'actions) view;
-    actions : 'actions Js.t Js.undefined;
-    root : Bs_webapi.Dom.Element.t Js.undefined > Js.t
+external _h :
+  string ->
+  ?a:'attrs ->
+  ([ `children of 'msg vnode array | `text of string ] [@bs.unwrap]) ->
+  'msg vnode =
+  "h" [@@bs.module "hyperapp"]
 
 (**
 https://github.com/hyperapp/hyperapp/blob/f307aee3d14f0268660c277698c213d8e42cea8d/docs/api.md#h
 
-This binding takes an array of node children. See also `h_`.
+This binding takes a list of node children. See also `h_`.
 *)
-external h : string -> ?a:'attributes Js.t -> vnode array -> vnode =
-  "" [@@bs.module "hyperapp"]
+let h tagName ?a children =
+  _h tagName ?a (`children (Array.of_list children))
 
 (** This binding takes a single text node. See also `h`. *)
-external h_ : string -> ?a:'attributes Js.t -> string -> vnode =
-  "h" [@@bs.module "hyperapp"]
+let h_ tagName ?a text = _h tagName ?a (`text text)
 
-external _app : ('state, 'actions) app_params -> unit =
+external targetOfEvent : 'a -> Bs_webapi.Dom.Element.t =
+  "target" [@@bs.get]
+
+external valueOfTarget : Bs_webapi.Dom.Element.t -> string =
+  "value" [@@bs.get]
+
+let valueOfEvent e = e |> targetOfEvent |> valueOfTarget
+
+type 'model state = < model : 'model > Js.t
+
+type ('model, 'msg) actions =
+  < update :
+    'model state ->
+    ('model, 'msg) actions ->
+    'msg ->
+    'model state [@bs] > Js.t
+
+type ('msg, 'a) viewActions = < update : 'msg -> 'a > Js.t
+
+external _app :
+  < state : 'model state;
+    view : 'model state -> ('msg, 'a) viewActions -> 'msg vnode [@bs];
+    actions : ('model, 'msg) actions;
+    root : Bs_webapi.Dom.Element.t > Js.t -> unit =
   "app" [@@bs.module "hyperapp"]
 
 (**
 https://github.com/hyperapp/hyperapp/blob/f307aee3d14f0268660c277698c213d8e42cea8d/docs/api.md#app
 
 Use OCaml-style named parameters instead of JavaScript-style param
-object. Also put view function at end for a more DSL-like feel.
+object.
 *)
-let app ?state ?actions ?root view = _app [%bs.obj {
-  state = Js.Undefined.from_opt state;
-  view;
-  actions = Js.Undefined.from_opt actions;
-  root = Js.Undefined.from_opt root
-}]
+let app ~model ~view ~update root =
+  let view = fun [@bs] state actions ->
+    view state##model (actions##update) in
 
+  _app [%obj {
+    state = [%obj { model }];
+    view;
+
+    actions =
+      [%obj { update = fun [@bs] state _ payload ->
+        [%obj { model = update state##model payload }] }];
+
+    root =
+      Js.Option.getExn
+        Bs_webapi.Dom.(Document.getElementById root document) }]

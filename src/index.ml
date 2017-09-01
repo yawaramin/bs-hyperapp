@@ -1,22 +1,36 @@
-let () =
-  let open Hyperapp in
-  let state = [%obj { value = 0 }] in
+open Hyperapp
 
-  let actions = object
-    method increment state = [%obj { value = state##value + 1 }]
-    method decrement state = [%obj { value = state##value - 1 }]
-  end [@bs] in
+type msg =
+  Increment | Decrement | Reset | Edit of int | Set | Disable of bool
 
-  let root =
-    Js.Option.getExn
-      Bs_webapi.Dom.(Document.getElementById "root" document) in
+(** Current value, edited value, 'set' button disabled or not *)
+let initModel = 0, 0, false
 
-  app ~state ~actions ~root begin fun [@bs] state actions ->
-    let text = "Current value is: " ^ string_of_int state##value in
+let view (value, edit, disabled) msg =
+  let text = "Current value is: " ^ string_of_int value in
+  let onchange e =
+    let m = try Edit (int_of_string (valueOfEvent e))
+      with _ -> Disable true in
 
-    h "div" [|
-      h_ "p" ~a:[%obj { _class = "main" }] text;
-      h_ "button" ~a:[%obj { onclick = actions##increment }] "Increment";
-      h_ "button" ~a:[%obj { onclick = actions##decrement }] "Decrement" |]
-  end
+    msg m in
 
+  let button ?(disabled=false) title m =
+    h_ "button" ~a:[%obj { disabled; onclick = fun _ -> msg m }] title in
+
+  h "div" [
+    h_ "p" ~a:[%obj { _class = "main" }] text;
+    button "Increment" Increment;
+    button "Decrement" Decrement;
+    button "Reset" Reset;
+    h "input" ~a:[%obj { value = edit; onchange }] [];
+    button ~disabled "Set" Set ]
+
+let update (value, edit, disabled) = function
+  | Increment -> value + 1, edit, disabled
+  | Decrement -> value - 1, edit, disabled
+  | Reset -> initModel
+  | Edit edit -> value, edit, false
+  | Set -> edit, edit, disabled
+  | Disable bool -> value, edit, bool
+
+let () = app ~model:initModel ~view ~update "root"
