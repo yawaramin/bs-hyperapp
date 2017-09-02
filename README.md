@@ -24,3 +24,17 @@ with `BsHyperapp.Hyperapp.h` (for tags with children) and
 `BsHyperapp.Hyperapp.h_` (for tags with a single text node as the body).
 
 For an illustrative example, see `src/index.ml`.
+
+### Difference between `app` and `asyncApp`
+
+There are two different app runners (for now) because Elm does something
+similar. The `app` runner is a simple synchronous runner like Elm's
+http://package.elm-lang.org/packages/elm-lang/html/2.0.0/Html#beginnerProgram
+, in that it doesn't manage effects like HTTP requests. The `asyncApp` runner
+on the other hand does manage effects asynchronously, like Elm's
+http://package.elm-lang.org/packages/elm-lang/html/2.0.0/Html#program . In
+the future I may decide to unify the two using a parameterised OCaml module.
+
+Unlike Elm's `program`, `asyncApp` has a (I believe) simpler way of managing
+effects: its update function returns a JavaScript promise of a new model
+instead of Elm's pair of (new model, effectful action to carry out).
