@@ -1,6 +1,3 @@
-module Promise = Js.Promise
-open Hyperapp
-
 type msg =
   Increment | Decrement | Reset | Edit of int | Set | Disable of bool
   [@@bs.deriving { accessors }]
@@ -10,6 +7,7 @@ type model = { value : int; newValue : int; quote : string option }
 let initModel = { value = 0; newValue = 0; quote = None }
 
 let view { value; newValue; quote } msg =
+  let open Hyperapp in
   let text = "Current value is: " ^ string_of_int value in
   (*
   If the edited new value is not a proper number and thus the 'set'
@@ -37,7 +35,7 @@ let view { value; newValue; quote } msg =
     button ~disabled "Set" set;
     h_ "p" quoteText ]
 
-let update model = function
+let update model = let module Promise = Js.Promise in function
   | Increment -> Promise.resolve { model with value = model.value + 1 }
   | Decrement -> Promise.resolve { model with value = model.value - 1 }
   | Reset -> Promise.resolve initModel
@@ -49,4 +47,4 @@ let update model = function
 
     else Promise.resolve { model with quote = None }
 
-let () = asyncApp ~model:initModel ~view ~update "root"
+let () = Hyperapp.asyncApp ~model:initModel ~view ~update "root"
