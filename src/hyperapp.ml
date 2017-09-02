@@ -49,7 +49,7 @@ external _app :
 type ('model, 'msg) asyncActions =
   < update :
     'model state ->
-    ('model, 'msg) actions ->
+    ('model, 'msg) asyncActions ->
     'msg ->
     (('model state -> unit Js.Promise.t) -> unit Js.Promise.t [@bs]) [@bs] > Js.t
 
