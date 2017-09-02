@@ -1,4 +1,5 @@
 type 'msg vnode
+type ('model, 'msg) view = 'model -> ('msg -> unit) -> 'msg vnode
 
 external _h :
   string ->
@@ -35,27 +36,54 @@ type ('model, 'msg) actions =
     'msg ->
     'model state [@bs] > Js.t
 
-type ('msg, 'a) viewActions = < update : 'msg -> 'a > Js.t
+type ('model, 'msg) _view =
+  'model state -> < update : 'msg -> unit > Js.t -> 'msg vnode [@bs]
 
 external _app :
   < state : 'model state;
-    view : 'model state -> ('msg, 'a) viewActions -> 'msg vnode [@bs];
+    view : ('model, 'msg) _view;
     actions : ('model, 'msg) actions;
     root : Bs_webapi.Dom.Element.t > Js.t -> unit =
   "app" [@@bs.module "hyperapp"]
 
-let app ~model ~view ~update root =
-  let view = fun [@bs] state actions ->
-    view state##model (actions##update) in
+type ('model, 'msg) asyncActions =
+  < update :
+    'model state ->
+    ('model, 'msg) actions ->
+    'msg ->
+    (('model state -> unit Js.Promise.t) -> unit Js.Promise.t [@bs]) [@bs] > Js.t
 
+external _asyncApp :
+  < state : 'model state;
+    view : ('model, 'msg) _view;
+    actions : ('model, 'msg) asyncActions;
+    root : Bs_webapi.Dom.Element.t > Js.t -> unit =
+  "app" [@@bs.module "hyperapp"]
+
+let viewOf view = fun [@bs] state actions ->
+  view state##model actions##update
+
+let rootOf root =
+  Js.Option.getExn Bs_webapi.Dom.(Document.getElementById root document)
+
+let app ~model ~view ~update root =
   _app [%obj {
     state = [%obj { model }];
-    view;
+    view = viewOf view;
 
     actions =
       [%obj { update = fun [@bs] state _ payload ->
         [%obj { model = update state##model payload }] }];
 
-    root =
-      Js.Option.getExn
-        Bs_webapi.Dom.(Document.getElementById root document) }]
+    root = rootOf root }]
+
+let asyncApp ~model ~view ~update root =
+  _asyncApp [%obj {
+    state = [%obj { model }];
+    view = viewOf view;
+    actions =
+      [%obj { update = fun [@bs] state _ payload -> fun [@bs] update' ->
+        payload |> update state##model |> Js.Promise.then_ (fun model' ->
+          update' [%obj { model = model' }]) }];
+
+    root = rootOf root }]
