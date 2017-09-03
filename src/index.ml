@@ -1,5 +1,14 @@
-type msg =
-  Increment | Decrement | Reset | Edit of int | Set | Disable of bool
+module Promise = Js.Promise
+
+type 'a msg =
+  | NoOp
+  | Log of 'a
+  | Increment
+  | Decrement
+  | Reset
+  | Edit of int
+  | Set
+  | Disable of bool
   [@@bs.deriving { accessors }]
 
 type model = { value : int; newValue : int; quote : string option }
@@ -28,23 +37,40 @@ let view { value; newValue; quote } msg =
 
   h "div" ~a:[%obj { _class = "main" }] [
     h_ "p" text;
-    button "Increment" increment;
-    button "Decrement" decrement;
-    button "Reset" reset;
+    button "Increment" Increment;
+    button "Decrement" Decrement;
+    button "Reset" Reset;
     h "input" ~a:[%obj { value = newValue; onchange }] [];
-    button ~disabled "Set" set;
+    button ~disabled "Set" Set;
     h_ "p" quoteText ]
 
-let update model = let module Promise = Js.Promise in function
-  | Increment -> Promise.resolve { model with value = model.value + 1 }
-  | Decrement -> Promise.resolve { model with value = model.value - 1 }
-  | Reset -> Promise.resolve initModel
-  | Edit newValue -> Promise.resolve { model with newValue; quote = None }
-  | Set -> Promise.resolve { model with value = model.newValue }
-  | Disable disabled ->
-    if disabled then Index_Quote.get () |> Promise.then_ (fun quote ->
-      Promise.resolve { model with quote })
+let update model =
+  let open Hyperapp.State in
+  let open Promise in
 
-    else Promise.resolve { model with quote = None }
+  function
+    | NoOp -> oldAsync ()
+    | Log string -> string |> Js.log |> oldAsync
+    | Increment -> { model with value = model.value + 1 } |> newAsync
+    | Decrement -> { model with value = model.value - 1 } |> newAsync
+    | Reset -> initModel |> newAsync
+    | Edit newValue -> { model with newValue; quote = None } |> newAsync
+    | Set -> newAsync { model with value = model.newValue }
+    | Disable disabled ->
+      Some begin
+        if disabled then () |> Index_Quote.get |> then_ (fun quote ->
+          resolve { model with quote })
 
-let () = Hyperapp.asyncApp ~model:initModel ~view ~update "root"
+        else resolve { model with quote = None }
+      end
+
+let events _ = function
+  | `load _ -> Edit 5
+  | `update { value; newValue } ->
+    Log begin
+      Printf.sprintf "New model: value=%d newValue=%d" value newValue
+    end
+
+  | _ -> NoOp
+
+let () = Hyperapp.asyncApp ~model:initModel ~view ~update ~events "root"
