@@ -47,4 +47,4 @@ let update model = let module Promise = Js.Promise in function
 
     else Promise.resolve { model with quote = None }
 
-let () = Hyperapp.asyncApp ~model:initModel ~view ~update "root"
+let () = Hyperapp.app ~model:initModel ~view ~update "root"
