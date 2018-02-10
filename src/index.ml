@@ -6,31 +6,30 @@ type model = {value : int; newValue : int; quote : string option}
 
 let initModel = {value = 0; newValue = 0; quote = None}
 
+let onchange msg e =
+  let m = try e |> Hyperapp.valueOfEvent |> int_of_string |> edit with
+  | _ -> disable true in
+  msg m
+
+let button msg m ?(disabled=false) title = Hyperapp.h_
+  "button" ~a:[%obj {disabled; onclick = fun _ -> msg m}] title
+
 let view {value; newValue; quote} msg =
   let open Hyperapp in
-  let text = "Current value is: " ^ string_of_int value in
   (* If the edited new value is not a proper number and thus the 'set'
      button is disabled, display the quote of the day. Otherwise display
      nothing. *)
+
   let disabled, quoteText =
     match quote with Some text -> true, text | _ -> false, "" in
 
-  let onchange e =
-    let m = try e |> valueOfEvent |> int_of_string |> edit with
-      | _ -> disable true in
-
-    msg m in
-
-  let button ?(disabled=false) title m =
-    h_ "button" ~a:[%obj {disabled; onclick = fun _ -> msg m}] title in
-
   h "div" ~a:[%obj {_class = "main"}] [
-    h_ "p" text;
-    button "Increment" increment;
-    button "Decrement" decrement;
-    button "Reset" reset;
-    h "input" ~a:[%obj { value = newValue; onchange }] [];
-    button ~disabled "Set" set;
+    h_ "p" {j|Current value is: $value|j};
+    button msg increment "Increment";
+    button msg decrement "Decrement";
+    button msg reset "Reset";
+    h "input" ~a:[%obj { value = newValue; onchange = onchange msg }] [];
+    button msg set ~disabled "Set";
     h_ "p" quoteText ]
 
 let update model = let open Js.Promise in function
